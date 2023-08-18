@@ -1,8 +1,7 @@
 {
-  "name": "typescript-action",
-  "version": "0.0.0",
+  "name": "Jira Release",
+  "version": "0.0.1",
   "private": true,
-  "description": "TypeScript template action",
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
@@ -15,20 +14,19 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/actions/typescript-action.git"
+    "url": "git+https://github.com/AlexHird/JiraRelease"
   },
   "keywords": [
     "actions",
     "node",
-    "setup"
+    "jira"
   ],
-  "author": "",
+  "author": "Alexander Hirdman",
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/github": "^5.1.1",
-    "axios": "^1.4.0",
-    "node-fetch": "^3.3.2"
+    "axios": "^1.4.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.3",

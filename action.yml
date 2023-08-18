@@ -1,6 +1,9 @@
-name: 'Create JIRA Release'
+name: '@ahirdman/Create JIRA Release'
 description: 'Creates a JIRA release containing tickets referenced in commit subjects'
 author: 'Alexander Hirdman'
+branding:
+  icon: 'inbox'
+  color: 'black'
 inputs:
   github-token:
     required: true
@@ -11,6 +14,9 @@ inputs:
   release-tag:
     required: false
     description: 'git tag associated with release (optional)'
+  release-name-prefix:
+    required: false
+    description: 'prefix for the version number, to be used as Jira Release Name'
 runs:
   using: 'node16'
   main: 'dist/index.js'

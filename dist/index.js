@@ -49,20 +49,20 @@ const axios_1 = __importDefault(__nccwpck_require__(8757));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const githubToken = core.getInput("github-token", { required: true });
-            const jiraUrl = core.getInput("jira-webhook-url", { required: true });
+            const githubToken = core.getInput('github-token', { required: true });
+            const jiraUrl = core.getInput('jira-webhook-url', { required: true });
             const octokit = github.getOctokit(githubToken);
             const { data: latestRelease } = yield octokit.rest.repos.getLatestRelease({
                 owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
+                repo: github.context.repo.repo
             });
             if (!latestRelease) {
-                core.setFailed("No release found.");
+                core.setFailed('No release found.');
             }
             const { data: commits } = yield octokit.rest.repos.listCommits({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
-                sha: latestRelease.target_commitish,
+                sha: latestRelease.target_commitish
             });
             const jiraTickets = [];
             for (const commit of commits) {
@@ -80,14 +80,16 @@ function run() {
             });
             const response = yield axios_1.default.post(jiraUrl, postBody, {
                 headers: {
-                    "Content-Type": "application/json",
-                },
+                    'Content-Type': 'application/json'
+                }
             });
             if (response.status !== 200) {
                 core.setFailed(`Failed to post data to API: ${response.statusText}`);
             }
-            core.info("Issues sent to Jira:");
-            jiraTickets.forEach((ticket) => core.info(ticket));
+            core.info('Issues sent to Jira:');
+            for (const ticket of jiraTickets) {
+                core.info(ticket);
+            }
         }
         catch (error) {
             core.setFailed(`Action failed with error: ${error}`);

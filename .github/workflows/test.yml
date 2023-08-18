@@ -1,33 +1,35 @@
 name: 'build-test'
 
 on:
+  pull_request:
   push:
-    branches: [ "main" ]
-# on: # rebuild any PRs and main branch changes
-#   pull_request:
-#   push:
-#     branches:
-#       - main
-#       - 'releases/*'
+    branches:
+      - main
+      - 'releases/*'
 
 jobs:
-#   build: # make sure build/ci work properly
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v3
-#       - run: |
-#           npm install
-#       - run: |
-#           npm run all
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkoit repository
+        uses: actions/checkout@v3
+        
+      - name: Install
+        run: |
+          npm install
 
-  test: # make sure the action works on a clean machine without building
+      - name: Verify
+        run: |
+          npm run all
+
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Checkoit repository
         uses: actions/checkout@v3
 
-      - name: Run workflow
+      - name: Run Action
         uses: ./
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          jira-webhook-url: https://automation.atlassian.com/pro/hooks/98a41dc0fd2df99da7b3c96060dca77462963929
+          jira-webhook-url: https://automation.atlassian.com/pro/hooks/666
