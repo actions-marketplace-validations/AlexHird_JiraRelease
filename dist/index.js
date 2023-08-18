@@ -44,10 +44,8 @@ const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        core.info("Starting");
         try {
-            const octokit = github.getOctokit(core.getInput('github-token'));
-            core.info("Valid octokit");
+            const octokit = github.getOctokit(core.getInput("github-token"));
             // Fetch the latest release
             const { data: latestRelease } = yield octokit.rest.repos.getLatestRelease({
                 owner: github.context.repo.owner,
@@ -55,7 +53,6 @@ function run() {
                 repo: github.context.repo.repo,
                 // repo: 'leveransappen-fe'
             });
-            core.info(latestRelease.url);
             if (latestRelease) {
                 console.log(`Latest Release: ${latestRelease.tag_name}`);
                 const { data: commits } = yield octokit.rest.repos.listCommits({
@@ -63,18 +60,22 @@ function run() {
                     repo: github.context.repo.repo,
                     sha: latestRelease.target_commitish,
                 });
-                console.log('Commit messages:');
+                const jiraTickets = [];
                 for (const commit of commits) {
-                    console.log(commit.commit.message);
+                    const match = commit.commit.message.match(/\b(MA-\d+)\b/);
+                    if (match) {
+                        jiraTickets.push(match[1]);
+                        console.log(`Found Jira ticket number: ${match[1]}`);
+                    }
                 }
+                console.log("Jira Issues", jiraTickets);
             }
             else {
-                core.warning('No release found.');
+                core.warning("No release found.");
             }
         }
         catch (error) {
-            console.log(error);
-            core.setFailed("something went wrong");
+            core.setFailed("Something went wrong");
         }
     });
 }

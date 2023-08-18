@@ -1,11 +1,9 @@
-import * as core from '@actions/core';
-import * as github from '@actions/github';
+import * as core from "@actions/core";
+import * as github from "@actions/github";
 
 export async function run() {
-  core.info("Starting")
   try {
-    const octokit = github.getOctokit(core.getInput('github-token'));
-    core.info("Valid octokit")
+    const octokit = github.getOctokit(core.getInput("github-token"));
 
     // Fetch the latest release
     const { data: latestRelease } = await octokit.rest.repos.getLatestRelease({
@@ -14,8 +12,6 @@ export async function run() {
       repo: github.context.repo.repo,
       // repo: 'leveransappen-fe'
     });
-
-    core.info(latestRelease.url)
 
     if (latestRelease) {
       console.log(`Latest Release: ${latestRelease.tag_name}`);
@@ -26,18 +22,24 @@ export async function run() {
         sha: latestRelease.target_commitish,
       });
 
-      console.log('Commit messages:');
+      const jiraTickets: string[] = [];
+
       for (const commit of commits) {
-        console.log(commit.commit.message);
+        const match = commit.commit.message.match(/\b(MA-\d+)\b/);
+
+        if (match) {
+          jiraTickets.push(match[1]);
+          console.log(`Found Jira ticket number: ${match[1]}`);
+        }
       }
+
+      console.log("Jira Issues", jiraTickets);
     } else {
-      core.warning('No release found.');
+      core.warning("No release found.");
     }
   } catch (error) {
-    console.log(error)
-    core.setFailed("something went wrong");
+    core.setFailed("Something went wrong");
   }
 }
 
 run();
-
