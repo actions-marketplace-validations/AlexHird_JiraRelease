@@ -49,14 +49,15 @@ const axios_1 = __importDefault(__nccwpck_require__(8757));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const octokit = github.getOctokit(core.getInput("github-token"));
-            const jiraUrl = core.getInput("jira-webhook-url");
+            const githubToken = core.getInput("github-token", { required: true });
+            const jiraUrl = core.getInput("jira-webhook-url", { required: true });
+            const octokit = github.getOctokit(githubToken);
             const { data: latestRelease } = yield octokit.rest.repos.getLatestRelease({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
             });
             if (!latestRelease) {
-                core.warning("No release found.");
+                core.setFailed("No release found.");
             }
             const { data: commits } = yield octokit.rest.repos.listCommits({
                 owner: github.context.repo.owner,
@@ -70,8 +71,12 @@ function run() {
                     jiraTickets.push(match[1]);
                 }
             }
+            if (!jiraTickets.length) {
+                core.warning(`No Jira issues found in release: ${latestRelease.name}`);
+            }
             const postBody = JSON.stringify({
                 issues: jiraTickets,
+                version: latestRelease.tag_name
             });
             const response = yield axios_1.default.post(jiraUrl, postBody, {
                 headers: {
@@ -81,7 +86,8 @@ function run() {
             if (response.status !== 200) {
                 core.setFailed(`Failed to post data to API: ${response.statusText}`);
             }
-            console.log("Jira Issues", jiraTickets);
+            core.info("Issues sent to Jira:");
+            jiraTickets.forEach((ticket) => core.info(ticket));
         }
         catch (error) {
             core.setFailed(`Action failed with error: ${error}`);

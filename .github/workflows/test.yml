@@ -23,9 +23,6 @@ jobs:
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
-      - name: Test github-token
-        run: echo ${{ secrets.GITHUB_TOKEN }}
-
       - name: Checkoit repository
         uses: actions/checkout@v3
 

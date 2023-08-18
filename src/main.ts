@@ -4,8 +4,10 @@ import axios from "axios";
 
 export async function run() {
   try {
-    const octokit = github.getOctokit(core.getInput("github-token"));
-    const jiraUrl = core.getInput("jira-webhook-url");
+    const githubToken = core.getInput("github-token", { required: true });
+    const jiraUrl = core.getInput("jira-webhook-url", { required: true });
+
+    const octokit = github.getOctokit(githubToken);
 
     const { data: latestRelease } = await octokit.rest.repos.getLatestRelease({
       owner: github.context.repo.owner,
@@ -13,7 +15,7 @@ export async function run() {
     });
 
     if (!latestRelease) {
-      core.warning("No release found.");
+      core.setFailed("No release found.");
     }
 
     const { data: commits } = await octokit.rest.repos.listCommits({
@@ -32,8 +34,13 @@ export async function run() {
       }
     }
 
+    if (!jiraTickets.length) {
+      core.warning(`No Jira issues found in release: ${latestRelease.name}`)
+    }
+
     const postBody = JSON.stringify({
       issues: jiraTickets,
+      version: latestRelease.tag_name
     });
 
     const response = await axios.post(jiraUrl, postBody, {
@@ -46,7 +53,9 @@ export async function run() {
       core.setFailed(`Failed to post data to API: ${response.statusText}`);
     }
 
-    console.log("Jira Issues", jiraTickets);
+    core.info("Issues sent to Jira:");
+    jiraTickets.forEach((ticket) => core.info(ticket))
+
   } catch (error) {
     core.setFailed(`Action failed with error: ${error}`);
   }
