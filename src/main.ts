@@ -1,19 +1,43 @@
-import * as core from '@actions/core'
-import {wait} from './wait'
+import * as core from '@actions/core';
+import * as github from '@actions/github';
 
-async function run(): Promise<void> {
+export async function run() {
+  core.info("Starting")
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
+    const octokit = github.getOctokit(core.getInput('github-token'));
+    core.info("Valid octokit")
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    // Fetch the latest release
+    const { data: latestRelease } = await octokit.rest.repos.getLatestRelease({
+      owner: github.context.repo.owner,
+      // owner: 'martinservera',
+      repo: github.context.repo.repo,
+      // repo: 'leveransappen-fe'
+    });
 
-    core.setOutput('time', new Date().toTimeString())
+    core.info(latestRelease.url)
+
+    if (latestRelease) {
+      console.log(`Latest Release: ${latestRelease.tag_name}`);
+
+      const { data: commits } = await octokit.rest.repos.listCommits({
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+        sha: latestRelease.target_commitish,
+      });
+
+      console.log('Commit messages:');
+      for (const commit of commits) {
+        console.log(commit.commit.message);
+      }
+    } else {
+      core.warning('No release found.');
+    }
   } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
+    console.log(error)
+    core.setFailed("something went wrong");
   }
 }
 
-run()
+run();
+

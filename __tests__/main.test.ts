@@ -1,29 +1,35 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import * as cp from 'child_process'
-import * as path from 'path'
-import {expect, test} from '@jest/globals'
+import * as github from '@actions/github';
+import * as core from '@actions/core';
+import { run } from '../src/main';
 
-test('throws invalid number', async () => {
-  const input = parseInt('foo', 10)
-  await expect(wait(input)).rejects.toThrow('milliseconds not a number')
-})
 
-test('wait 500 ms', async () => {
-  const start = new Date()
-  await wait(500)
-  const end = new Date()
-  var delta = Math.abs(end.getTime() - start.getTime())
-  expect(delta).toBeGreaterThan(450)
-})
+describe('get-commit-names', () => {
+  it('fetches commit messages for the latest release', async () => {
+    // Spy on the console.log function
+    const logSpy = jest.spyOn(console, 'log');
 
-// shows how the runner will run a javascript action with env / stdout protocol
-test('test runs', () => {
-  process.env['INPUT_MILLISECONDS'] = '500'
-  const np = process.execPath
-  const ip = path.join(__dirname, '..', 'lib', 'main.js')
-  const options: cp.ExecFileSyncOptions = {
-    env: process.env
-  }
-  console.log(cp.execFileSync(np, [ip], options).toString())
-})
+    // Mock the Octokit API responses
+    const octokit = {
+      repos: {
+        getLatestRelease: jest.fn().mockResolvedValue({ data: { tag_name: 'v1.0.0', target_commitish: 'main' } }),
+        listCommits: jest.fn().mockResolvedValue({ data: [{ commit: { message: 'Commit 1' } }] }),
+      },
+    };
+    (github.getOctokit as jest.Mock).mockReturnValue(octokit);
+
+    // Run the action
+    await run();
+
+    // Assertions
+    expect(core.warning).not.toHaveBeenCalled();
+    expect(logSpy).toHaveBeenCalledWith('Latest Release: v1.0.0');
+    expect(logSpy).toHaveBeenCalledWith('Commit messages:');
+    expect(logSpy).toHaveBeenCalledWith('Commit 1');
+
+    // Restore the original console.log function
+    logSpy.mockRestore();
+  });
+
+  // Add more test cases for different scenarios as needed
+});
+
