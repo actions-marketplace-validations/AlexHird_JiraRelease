@@ -5,6 +5,12 @@ inputs:
   github-token:
     required: true
     description: 'github token'
+  jira-webhook-url:
+    required: true
+    description: 'target webhook url'
+  release-tag:
+    required: false
+    description: 'git tag associated with release (optional)'
 runs:
   using: 'node16'
   main: 'dist/index.js'
